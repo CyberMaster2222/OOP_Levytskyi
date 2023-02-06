@@ -1,0 +1,223 @@
+using System;
+public class TCircle
+{
+    public double radius { get; set; } // поле радіус
+
+    public void InputRadius() // введення радіусу 
+    {
+        string buffer;
+        bool isPoint = false;
+        bool isMistake = false;
+
+        while (true)
+        {
+            Console.Write("Введіть радіус кола: ");
+            buffer = Console.ReadLine();
+
+            if (buffer != null)
+            {
+                if (buffer[0] == '-' && (buffer[1] == '.' || buffer[1] == ','))
+                {
+                    isMistake = true;
+                }
+
+                if (!isMistake)
+                {
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        if (i > 0 && buffer[i] == '-' || (buffer[i] <= 48 || buffer[i] >= 57) && buffer[i] != ',' && buffer[i] != '.' && buffer[i] != '-' || isPoint && (buffer[i] == '.' || buffer[i] == ','))
+                        {
+                            isMistake = true;
+                            break;
+                        }
+                        else if (!isPoint && (buffer[i] == '.' || buffer[i] == ','))
+                        {
+                            if (buffer[i] == '.')
+                            {
+                                buffer = buffer.Replace('.', ',');
+                            }
+                            isPoint = true;
+                        }
+                    }
+                }
+
+                if (isMistake) {
+                    Console.WriteLine("\nВведіть коректне значення!\n");
+                }
+                else
+                {
+                    radius = Double.Parse(buffer);
+                    break;
+                }
+            }
+           
+        }
+    }
+
+    public void OutputRadius() // виведення радіусу
+    {
+        Console.WriteLine("\nРадіус: " + radius + "\n");
+    }
+
+    virtual public double GetSquare() // отримати площу кола
+    {
+        return Math.PI * radius * radius;
+    }
+
+    virtual public double GetSectorSquare(double sectorAngleInDegrees) // отримати площу сектора кола
+    {
+        return GetSquare() * (sectorAngleInDegrees / 360.0);
+    }
+
+    public double GetCircuit() // отримати довжину кола
+    {
+        return 2 * Math.PI * radius;
+    }
+
+    public int CompareWith(TCircle otherCircle) // порівняти коло з іншим колом
+    {
+        if(radius > otherCircle.radius) // якщо радіус нашого кола більший за радіус іншого кола, то повертаємо 1
+        {
+            return 1;
+        }
+        else if(radius < otherCircle.radius) // якщо радіус нашого кола менший за радіус іншого кола, то повертаємо -1
+        {
+            return -1;
+        }
+        else // якщо радіус нашого кола дорівнює радіусу іншого кола, то повертаємо 0
+        {
+            return 0;
+        }
+    }
+
+    public static TCircle operator+(TCircle firstCircle, TCircle secondCircle) // перевантажуємо оператор додавання кіл (радіусів)
+    {
+        return new TCircle(firstCircle.radius + secondCircle.radius);
+    }
+
+    public static TCircle operator-(TCircle firstCircle, TCircle secondCircle) // перевантажуємо оператор віднімання кіл (радіусів)
+    {
+        return new TCircle(firstCircle.radius - secondCircle.radius);
+    }
+
+    public static TCircle operator*(TCircle circle, double numb) // перевантаження оператора множення радіуса на число
+    {
+        return new TCircle(circle.radius * numb);
+    }
+
+    public TCircle() // конструктор за замовчуванням
+    {
+        radius = 0.0;
+    }
+
+    public TCircle(double radius) // конструктор з параметром
+    {
+        this.radius = radius;
+    }
+
+    public TCircle(TCircle otherCircle) // конструктор копіювання
+    {
+        radius = otherCircle.radius;
+    }
+
+}
+
+public class TCone : TCircle
+{
+    public double height { get; set; } // поле висота
+
+    public double GetConeVolume() // отримати об'єм конуса
+    {
+        return (1.0 / 3.0) * base.GetSquare() * height;
+    }
+
+    public override double GetSquare() // площа повної поверхні конуса
+    {
+        return base.GetSquare() + Math.PI * radius * Math.Sqrt(Math.Pow(radius/2, 2) + Math.Pow(height, 2)) ;
+    }
+
+    public override double GetSectorSquare(double sectorAngleInDegrees) // площа сектору повної поверхні конуса
+    {
+        return GetSquare() * (sectorAngleInDegrees / 360.0);
+    }
+
+    public TCone() : base()
+    {
+        height = 0.0;
+    }
+
+    public TCone(double radius, double height) : base(radius)
+    {
+        this.height = height;
+    }
+
+    public TCone(TCone other) : base(other)
+    {
+        height = other.height;
+    }
+}
+
+public class TestClass
+{
+    public static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.InputEncoding = System.Text.Encoding.UTF8;
+
+        Console.WriteLine("Демонструємо конструктор за замовчування для TCircle:");
+
+        TCircle myCircle1 = new TCircle();
+        myCircle1.OutputRadius();
+
+        Console.WriteLine("Тепер вводимо радіус з клавіатури:");
+        myCircle1.InputRadius();
+        myCircle1.OutputRadius();
+
+        Console.WriteLine("Демонструємо конструктор з параметром (випадкове значення) для TCircle:");
+        TCircle myCircle2 = new TCircle(new Random(DateTime.Now.Millisecond).NextDouble() * 40.0 + 10.0);
+        myCircle2.OutputRadius();
+
+        Console.WriteLine("Демонструємо конструктор копіювання для TCircle:");
+        TCircle myCircle3 = new TCircle(myCircle2);
+        myCircle3.OutputRadius();
+
+        double angle = new Random(DateTime.Now.Millisecond).NextDouble() * 360.0;
+        Console.WriteLine("\nОбчислимо площу нашого кола: " + myCircle3.GetSquare());
+        Console.WriteLine("Тепер обчислимо площу сектора нашого кола (з випадковим кутом сектора): " + myCircle3.GetSectorSquare(angle) + " де кут сектора: " + angle);
+        Console.WriteLine("Обчислимо довжину нашого кола: " + myCircle3.GetCircuit());
+
+        Console.WriteLine("Порівняємо наше коло з першим колом: ");
+
+        switch (myCircle3.CompareWith(myCircle1))
+        {
+            case -1:
+                Console.WriteLine("Наше коло менше за інше!");
+                break;
+            case 0:
+                Console.WriteLine("Кола рівні!");
+                break;
+            case 1:
+                Console.WriteLine("Наше коло більше за інше!!");
+                break;
+
+        }
+
+        double numb = new Random(DateTime.Now.Millisecond).NextDouble() * 10.0 + 1.0;
+        Console.WriteLine("\nСтворимо нове коло, використавши перевантажений оператор * множення нашого кола (радіуса) на випадкове число : " + numb);
+        TCircle myCircle4 = myCircle3 * numb;
+        myCircle4.OutputRadius();
+
+        double height = new Random(DateTime.Now.Millisecond).NextDouble() * 10.0 + 1.0;
+        Console.WriteLine("\nНа основі нового кола створимо новий конус з випадковою висотою: " + height);
+
+        TCone myCone = new TCone(myCircle4.radius, height);
+        myCone.OutputRadius();
+
+        Console.WriteLine("Об'єм конуса: " + myCone.GetConeVolume());
+        Console.WriteLine("Площа повної поверхні конуса: " + myCone.GetSquare());
+        
+        angle = new Random(DateTime.Now.Millisecond).NextDouble() * 360.0;
+        Console.WriteLine("Площа сектора повної поверхні конуса: " + myCone.GetSectorSquare(angle) + " де кут: " + angle);
+
+    }
+}
