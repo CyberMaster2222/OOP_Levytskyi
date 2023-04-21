@@ -1,0 +1,455 @@
+
+using System.Text;
+
+public class RationFraction
+{
+    public readonly int nominator;
+    public readonly int denominator;
+
+    public RationFraction(int nominator, int denominator)
+    {
+        if(denominator == 0)
+        {
+            throw new Exception("--Знаменник не може бути нульовим!--");
+        }
+
+        if(denominator > 0)
+        {
+            this.nominator = nominator;
+            this.denominator = denominator;
+        }
+        else
+        {
+            this.nominator = -nominator;
+            this.denominator = -denominator;
+        }
+
+        int nsd = NSD(Math.Abs(nominator), Math.Abs(denominator));
+        
+        if(nsd > 1)
+        {
+            this.nominator /= nsd;
+            this.denominator /= nsd;
+        }
+    }
+
+    public string GetFraction()
+    {
+        return nominator + "/" + denominator;
+    }
+
+    public static RationFraction operator-(RationFraction rationFraction)
+    {
+        return new RationFraction(-rationFraction.nominator, rationFraction.denominator);
+    }
+
+    public static double ToDecimal(RationFraction rF)
+    {
+        return (double)(rF.nominator) / (double)(rF.denominator);
+    }
+
+    public static RationFraction FromDecimal(double d)
+    {
+        string str = d.ToString();
+
+        if(str.IndexOf('.') == -1)
+        {
+            return new RationFraction((int)Double.Parse(str), 1);
+        }
+        return new RationFraction((int)Double.Parse(str.Replace(".", "")), 
+                                  (int)Math.Pow(10, str.Substring(str.IndexOf('.') + 1).Length));
+    }
+
+    public static int NSD(int a, int b)
+    {
+        while (b != 0)
+        {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    public static int NSK(int a, int b)
+    {
+        return a / NSD(a, b) * b;
+    }
+
+}
+
+public class RomanNum
+{
+    public readonly string asStr;
+    
+    private static int[] digitsValues = { 1, 4, 5, 9, 10, 40, 50, 90, 100, 400, 500, 900, 1000 };
+    private static string[] romanDigits = { "I", "IV", "V", "IX", "X", "XL", "L", "XC", "C", "CD", "D", "CM", "M" };
+
+    public RomanNum(int numb)
+    {
+        asStr = ToRoman(numb);
+    }
+
+    public RomanNum(string romanStr)
+    {
+        asStr = romanStr;
+    }
+
+    public static string ToRoman(int numb)
+    {
+
+        StringBuilder result = new StringBuilder();
+       
+        while (numb > 0)
+        {
+            for (int i = digitsValues.Count() - 1; i >= 0; i--)
+                if (numb / digitsValues[i] >= 1)
+                {
+                    numb -= digitsValues[i];
+                    result.Append(romanDigits[i]);
+                    break;
+                }
+        }
+        return result.ToString();
+    }
+
+    public static int FromRoman(RomanNum roman)
+    {
+        int numb = 0;
+
+        for(int i = 0; i < roman.asStr.Length; i++)
+        {
+            for (int j = 0; j < romanDigits.Length; j++)
+            {
+                if (roman.asStr[i] == romanDigits[j][0])
+                {
+                    if(i + 1 < roman.asStr.Length && j + 3 < romanDigits.Length && 
+                        (roman.asStr[i + 1] == romanDigits[j + 1][1] ||
+                         roman.asStr[i + 1] == romanDigits[j + 3][1]))
+                    {
+                        if(roman.asStr[i + 1] == romanDigits[j + 1][1])
+                        {
+                            numb += digitsValues[j + 1];
+                        }
+                        else
+                        {
+                            numb += digitsValues[j + 3];
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        numb += digitsValues[j];
+                    }
+                    
+                    break;
+                }
+            }
+
+
+        }
+
+        return numb;
+    }
+}
+
+
+interface IRationOperations
+{
+    public RationFraction Addition(RationFraction num1, RationFraction num2);
+    public RationFraction Subtract(RationFraction num1, RationFraction num2);
+}
+
+interface IRomanOperations
+{
+    public RomanNum Addition(RomanNum num1, RomanNum num2);
+    public RomanNum Subtract(RomanNum num1, RomanNum num2);
+}
+
+public class Operations : IRationOperations, IRomanOperations
+{
+    public RationFraction Addition(RationFraction num1, RationFraction num2)
+    {
+        if(num1.denominator == num2.denominator)
+        {
+            return new RationFraction(num1.nominator + num2.nominator, num1.denominator);
+        }
+        int nsk = RationFraction.NSK(Math.Abs(num1.denominator), Math.Abs(num2.denominator));
+
+        return new RationFraction(nsk / num1.denominator * num1.nominator + 
+                                  nsk / num2.denominator * num2.nominator, nsk);
+
+    }
+
+    public RomanNum Addition(RomanNum num1, RomanNum num2)
+    {
+        return new RomanNum(RomanNum.FromRoman(num1) + RomanNum.FromRoman(num2));
+    }
+
+    public RationFraction Subtract(RationFraction num1, RationFraction num2)
+    {
+        return Addition(num1, -num2);
+    }
+
+    public RomanNum Subtract(RomanNum num1, RomanNum num2)
+    {
+        return new RomanNum(RomanNum.FromRoman(num1) - RomanNum.FromRoman(num2));
+    }
+}
+
+public class TestClass
+{
+    public static int InputInt(string instruction, int from, int to)
+    {
+        string buffer;
+        while (true)
+        {
+            Console.WriteLine(instruction);
+
+            try
+            {
+                buffer = Console.ReadLine();
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (OutOfMemoryException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+
+            bool isMistake = false;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i] < '0' || buffer[i] > '9')
+                {
+                    if (i == 0 && buffer[i] != '-' || i > 0)
+                    {
+                        isMistake = true;
+                        break;
+                    }
+                }
+
+            }
+
+            if (isMistake)
+            {
+                Console.WriteLine("Введено некоректне значення!\n");
+            }
+            else
+            {
+                int value = Int32.Parse(buffer);
+                if (value >= from && value <= to)
+                {
+                    return value;
+                }
+
+                Console.WriteLine("Потрібно ввести число від " + from + " до " + to + "!\n");
+            }
+            
+        }
+    }
+
+    public static RationFraction InputFraction()
+    {
+        string buffer;
+        while (true)
+        {
+            Console.WriteLine("Введіть раціональний дріб у вигляді: [чисельник]/[знаменник]. Наприклад: 1/3, -5/9 і т.п.");
+
+            try
+            {
+                buffer = Console.ReadLine();
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (OutOfMemoryException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+
+            int index;
+            if((index = buffer.IndexOf('/')) == -1 || index == 0)
+            {
+                Console.WriteLine("Введено некоректне значення!\n");
+            }
+            else
+            {
+                bool isMistake = false;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    if (i != index && (buffer[i] < '0' || buffer[i] > '9'))
+                    {
+                        if (i == 0 && (buffer[i] != '-' || buffer[i] == '-' && index == 1) || i > 0)
+                        {
+                            isMistake = true;
+                            break;
+                        }
+                    }
+
+                }
+
+                if (isMistake)
+                {
+                    Console.WriteLine("Введено некоректне значення!\n");
+                }
+                else
+                {
+                    return new RationFraction(Int32.Parse(buffer.Substring(0, index)),
+                                              Int32.Parse(buffer.Substring(index + 1)));
+                }
+            }
+        }
+    }
+
+    public static RomanNum InputRoman()
+    {
+        string buffer;
+        while (true)
+        {
+            Console.WriteLine("Введіть римське число. Наприклад: XVII, III і т.п.");
+
+            try
+            {
+                buffer = Console.ReadLine();
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (OutOfMemoryException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Console.WriteLine(e.Message);
+                buffer = "";
+            }
+
+            bool isMistake = false;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (!(buffer[i] == 'I' || buffer[i] == 'V' || buffer[i] == 'X' || buffer[i] == 'L' ||
+                      buffer[i] == 'C' || buffer[i] == 'D' || buffer[i] == 'M'))
+                {
+                    isMistake = true;
+                    break;
+                }
+
+            }
+
+            if (isMistake)
+            {
+                Console.WriteLine("Введено некоректне значення!\n");
+            }
+            else
+            {
+                return new RomanNum(buffer);
+            }
+        }
+    }
+
+    public static void Menu()
+    {
+        Operations operations = new Operations();
+
+        while (true)
+        {
+
+            Console.WriteLine("\n--Виберіть дію, яку хочете виконати--");
+            Console.WriteLine("\tВведіть 0, щоб завершити роботу\n" +
+                              "\tВведіть 1, щоб додати раціональні дроби\n" +
+                              "\tВведіть 2, щоб відняти раціональні дроби\n" +
+                              "\tВведіть 3, щоб додати римські числа\n" + 
+                              "\tВведіть 4, щоб відняти римські числа\n");
+
+            int choice = InputInt("Введіть число від 0 до 4:", 0, 4);
+
+            switch (choice)
+            {
+                case 0:
+                    {
+                        Console.WriteLine("Робота завершена!");
+                        Environment.Exit(0);
+                        break;
+                    }
+                case 1:
+                    {
+                        Console.WriteLine("Введіть перший раціональний дріб:");
+                        RationFraction fraction1 = InputFraction();
+
+                        Console.WriteLine("Введіть другий раціональний дріб:");
+                        RationFraction fraction2 = InputFraction();
+
+                        Console.WriteLine(fraction1.GetFraction() + " + " + fraction2.GetFraction() +
+                                          " = " + operations.Addition(fraction1, fraction2).GetFraction());
+                        break;
+                    }
+                case 2:
+                    {
+                        Console.WriteLine("Введіть перший раціональний дріб:");
+                        RationFraction fraction1 = InputFraction();
+
+                        Console.WriteLine("Введіть другий раціональний дріб:");
+                        RationFraction fraction2 = InputFraction();
+
+                        Console.WriteLine(fraction1.GetFraction() + " - " + fraction2.GetFraction() +
+                                          " = " + operations.Subtract(fraction1, fraction2).GetFraction());
+                        break;
+                    }
+                case 3:
+                    {
+                        Console.WriteLine("Введіть перше римське число:");
+                        RomanNum roman1 = InputRoman();
+
+                        Console.WriteLine("Введіть друге римське число:");
+                        RomanNum roman2 = InputRoman();
+
+                        Console.WriteLine(roman1.asStr + " + " + roman2.asStr + " = " +
+                                          operations.Addition(roman1, roman2).asStr);
+                        break;
+                    }
+                case 4:
+                    {
+                        Console.WriteLine("Введіть перше римське число:");
+                        RomanNum roman1 = InputRoman();
+
+                        Console.WriteLine("Введіть друге римське число:");
+                        RomanNum roman2 = InputRoman();
+
+                        Console.WriteLine(roman1.asStr + " - " + roman2.asStr + " = " +
+                                          operations.Subtract(roman1, roman2).asStr);
+                        break;
+                    }
+            }
+        }
+    }
+
+    public static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.InputEncoding = System.Text.Encoding.UTF8;
+
+        Menu();
+    }
+}
