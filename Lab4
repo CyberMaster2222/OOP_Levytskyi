@@ -1,0 +1,144 @@
+public class TestClass
+{
+    public static int InputUInt(string instruction)
+    {
+        while (true)
+        {
+            int numb = 0;
+            Console.WriteLine(instruction);
+            try
+            {
+               numb = Int32.Parse(Console.ReadLine());
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine("\nНе введено даних!");
+            }
+            catch (FormatException e)
+            {
+                Console.WriteLine("\nПотрібно ввести число!");
+            }
+
+            if(numb > 0)
+            {
+                return numb;
+            }
+            else
+            {
+                Console.WriteLine("\nВведіть невід'ємне число!");
+            }
+        }
+    }
+
+    public static LinkedList<LinkedList<Int32>> InputMatr()
+    {
+        LinkedList<LinkedList<int>> matr = new LinkedList<LinkedList<int>>();
+
+        while (true)
+        {
+            int rowCount = InputUInt("\nВведіть кількість рядків матриці:");
+            int colCount = InputUInt("\nВведіть кількість стовпців матриці:");
+
+            Console.WriteLine("Введіть матрицю з 1 і 0 розміром {0} рядків на {1} стовпців", rowCount, colCount);
+            try
+            {
+                LinkedList<int> tmp;
+                for (int i = 0; i < rowCount; i++)
+                {
+                    matr.AddLast(new LinkedList<int>());
+                    string[] rowAsStr = Console.ReadLine().Split();
+                    for (int j = 0; j < colCount; j++)
+                    {
+                        tmp = matr.Last.Value;
+                        tmp.AddLast(Int32.Parse(rowAsStr[j]));
+
+                        if(!(tmp.Last.Value == 0 || tmp.Last.Value == 1))
+                        {
+                            throw new FormatException();
+                        }
+                    }
+                }
+                return matr;
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine("\nНе введено даних!");
+            }
+            catch (FormatException e)
+            {
+                Console.WriteLine("\nПотрібно ввести число 1 або 0!");
+            }
+        }
+    }
+
+    public static LinkedList<int>[] SplitMatr(LinkedList<LinkedList<int>> matr)
+    {
+        LinkedList<int>[] arrs = new LinkedList<int>[2];
+
+        for(int i = 0; i < arrs.GetLength(0); i++)
+        {
+            arrs[i] = new LinkedList<int>();
+        }
+
+        foreach(LinkedList<int> row in matr)
+        {
+            foreach(int elem in row)
+            {
+                if(elem == 0)
+                {
+                    arrs[0].AddLast(0);
+                }
+                else
+                {
+                    arrs[1].AddLast(1);
+                }
+            }
+        }
+
+        return arrs;
+    }
+
+    public static void PrintLinkedList<T>(LinkedList<T> list)
+    {
+        foreach(T element in list)
+        {
+            Console.Write(element + " ");
+        }
+        Console.WriteLine();
+    }
+
+    public static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.InputEncoding = System.Text.Encoding.UTF8;
+
+        while (true)
+        {
+
+            //введення матриці з нулів і одиниць
+            LinkedList<LinkedList<int>> oneZeroMatr = InputMatr();
+
+            LinkedList<int>[] splitVectors = SplitMatr(oneZeroMatr);
+
+            Console.WriteLine("\nМатриця:");
+            foreach (LinkedList<int> row in oneZeroMatr)
+            {
+                PrintLinkedList(row);
+            }
+
+            Console.WriteLine("\nОкремі масиви складені з елементів матриці:");
+            Console.Write("Масив з нулів розміром " + splitVectors[0].Count + ": ");
+            PrintLinkedList(splitVectors[0]);
+            Console.Write("Масив з одиниць розміром " + splitVectors[1].Count + ": ");
+            PrintLinkedList(splitVectors[1]);
+
+            Console.WriteLine("Якщо хочете завершити роботу, введіть 0. Інакше введіть будь-який інший символ:");
+            if(Console.ReadLine() == "0")
+            {
+                break;
+            }
+        }
+
+    }
+}
+
